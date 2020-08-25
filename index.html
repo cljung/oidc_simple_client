@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!-- https://developer.byu.edu/docs/consume-api/use-api/oauth-20/oauth-20-javascript-sample-code -->
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>OAuth Flows Simple Test App</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/themes/prism.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/CodeFlask.js/0.1.1/codeflask.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/prism.min.js" async></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/CodeFlask.js/0.1.1/codeflask.min.js" async></script>
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js" axync></script>
+	<style>
+		label { width:200px; display: inline-block; }
+		input { width:600px; display: inline-block; }
+	</style>
+  </head>
+  <body>
+	<p id="un-authenticated-msg" style="display:none;">
+	  <h1>Start page</h1>	
+	  <p>
+		<button type="button" onclick="getConfigFromUrl()">Load Config</button>
+		<br/>
+	  	<label for="configUrl">Config Url: </label>
+  		<input type="texbox" id="configUrl" value=""><br/><br/>
+		
+	  	<label for="client_id">client_id: </label>
+  		<input type="texbox" id="client_id" value=""><br/><br/>
+
+	  	<label for="client_secret">client_secret: </label>
+  		<input type="password" id="client_secret" value=""><br/><br/>
+
+	  	<label for="metadataUrl">metadataUrl: </label>
+  		<input type="texbox" id="metadataUrl" value=""><br/><br/>
+		  
+	  	<label for="authorization_endpoint">authorization_endpoint: </label>
+  		<input type="texbox" id="authorization_endpoint" value=""><br/><br/>
+
+	  	<label for="token_endpoint">token_endpoint: </label>
+  		<input type="texbox" id="token_endpoint" value=""><br/><br/>
+
+	  	<label for="end_session_endpoint">end_session_endpoint: </label>
+  		<input type="texbox" id="end_session_endpoint" value=""><br/><br/>
+
+		<button type="button" onclick="saveConfig()">Save Config</button>
+
+	  </p>
+	  <p>  
+		<a href="/index_implicitgrant.html">Implicit Grant Flow</a>
+		<br/><br/>
+		<a href="/index_authcode.html">Auth Code Flow</a>
+		<br/><br/>
+		<a href="/index_authcode.html?usePKCE=true">Auth Code Flow with PKCE</a>
+  	  </p>
+	</p>
+
+  </body>
+  <script>
+function parseParms(str) {
+	var pieces = str.split("&"), data = {}, i, parts;
+	// process each query pair
+	for (i = 0; i < pieces.length; i++) {
+		parts = pieces[i].split("=");
+		if (parts.length < 2) {
+			parts.push("");
+		}
+		data[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+	}
+	return data;
+}
+
+// config that is needed for the IDP. We persist it to browser local storage in index.html so the other pages can use it
+var config = {
+	client_id: "",
+	client_secret: "",
+	redirectUrl: document.location.origin + "/index.html",     // index.html will handle redirect back to index_authcode.html
+	authorization_endpoint: "", 
+	token_endpoint: "", 
+	end_session_endpoint: "",
+	metadataUrl: "https://yourtenant.b2clogin.com/yourtenant.onmicrosoft.com/B2C_1A_signup_signin/v2.0/.well-known/openid-configuration"
+}
+
+window.onload = function() {
+	// if this is not the first time we hit this page, we have the config in browser local storage
+	var data = window.localStorage.getItem('config' );
+	if ( data ) {
+		loadConfig();
+	} else {		
+		updateUI();
+	}
+	// possible redirects. code == auth code flow. hash == implicit grant
+	var code = parseParms(document.location.search.substring(1)).code;
+	if ( code ) {
+		var verifier = window.localStorage.getItem('code_verifier' );
+		if(verifier !== undefined && verifier !== null){
+			document.location = "/index_authcode.html" + document.location.search + "&usePKCE=true";
+		} else {
+			document.location = "/index_authcode.html" + document.location.search;
+		}
+	} 
+	if ( document.location.hash ) {
+		document.location = "/index_implicitgrant.html" + document.location.hash;
+	}
+}
+
+function updateUI() {
+	document.getElementById('client_id').value = config.client_id;
+	document.getElementById('client_secret').value = config.client_secret;
+	document.getElementById('metadataUrl').value = config.metadataUrl;
+	document.getElementById('authorization_endpoint').value = config.authorization_endpoint;
+	document.getElementById('end_session_endpoint').value = config.end_session_endpoint;
+	document.getElementById('token_endpoint').value = config.token_endpoint;
+	var urlConfig = window.localStorage.getItem('configUrl' );
+	if(urlConfig == undefined && urlConfig == null) {
+		urlConfig = document.location.origin + "/config.json"		
+	}
+	document.getElementById('configUrl').value = urlConfig;
+}
+function clearUI() {
+	document.getElementById('client_id').value = "";
+	document.getElementById('client_secret').value = "";
+	document.getElementById('metadataUrl').value = "";
+	document.getElementById('authorization_endpoint').value = "";
+	document.getElementById('end_session_endpoint').value = "";
+	document.getElementById('token_endpoint').value = "";
+}
+
+function loadConfig() {
+	config = JSON.parse(window.localStorage.getItem('config' ));
+	updateUI();
+}
+function saveConfig() {
+	config.client_id = document.getElementById('client_id').value;
+	config.client_secret = document.getElementById('client_secret').value;
+	config.metadataUrl = document.getElementById('metadataUrl').value;
+	config.authorization_endpoint = document.getElementById('authorization_endpoint').value;
+	config.token_endpoint = document.getElementById('token_endpoint').value;
+	config.end_session_endpoint = document.getElementById('end_session_endpoint').value;
+	window.localStorage.setItem('config', JSON.stringify(config) );
+	// if we have a metadataUrl, try go getch its details so we can get authorization/token endpoints
+	if ( config.metadataUrl ) {
+		loadMetadata(config.metadataUrl );
+	}
+}
+function loadMetadata(metadataUrl) {
+	$.ajax({
+		url: metadataUrl,
+		type: 'get',
+		success: function(response) {
+			config = JSON.parse(window.localStorage.getItem('config' ));
+			config.authorization_endpoint = response.authorization_endpoint;
+			config.token_endpoint = response.token_endpoint;
+			config.end_session_endpoint = response.end_session_endpoint;
+			window.localStorage.setItem('config', JSON.stringify(config) );
+			updateUI();
+		},error: function( jqXhr, textStatus, errorThrown ){
+			console.log( jqXhr );
+		}
+	});	
+}
+
+function getConfigFromUrl() {
+	var urlConfig = document.getElementById('configUrl').value;
+	clearUI();
+	$.ajax({
+        url: urlConfig,
+        type: 'get',
+		success: function(response) {            
+			config = response; 
+			window.localStorage.setItem('config', JSON.stringify(config) );
+			window.localStorage.setItem('configUrl', urlConfig );
+			updateUI();
+			loadMetadata( config.metadataUrl );
+        },error: function( jqXhr, textStatus, errorThrown ){
+			console.log( jqXhr );
+        }
+	});
+
+}
+  </script>
+</html>

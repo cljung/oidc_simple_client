@@ -1,0 +1,27 @@
+{
+  "name": "simple-oidc-oauth-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "javascript",
+    "authorization",
+    "microsoft",
+    "ms-identity",
+    "azure-ad",
+    "node.js"
+  ],
+  "dependencies": {
+    "@azure/msal-browser": "^2.0.0-beta.3",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0",
+    "yargs": "^15.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.3"
+  }
+}

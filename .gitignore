@@ -1,0 +1,13 @@
+#
+demo*/
+node_modules/
+tmp/
+
+# 
+*.pfx
+*.cer
+*.txt
+
+#
+cljung*.json
+*.zip
