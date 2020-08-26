@@ -29,6 +29,12 @@
 	  	<label for="client_secret">client_secret: </label>
   		<input type="password" id="client_secret" value=""><br/><br/>
 
+	  	<label for="redirectUrl">redirectUrl: </label>
+  		<input type="texbox" id="redirectUrl" value=""><br/><br/>
+
+	  	<label for="extraScopes">extra scopes: </label>
+  		<input type="texbox" id="extraScopes" value=""><br/><br/>
+
 	  	<label for="metadataUrl">metadataUrl: </label>
   		<input type="texbox" id="metadataUrl" value=""><br/><br/>
 		  
@@ -72,6 +78,7 @@ function parseParms(str) {
 var config = {
 	client_id: "",
 	client_secret: "",
+	extraScopes: "{client_id}",
 	redirectUrl: document.location.origin + "/index.html",     // index.html will handle redirect back to index_authcode.html
 	authorization_endpoint: "", 
 	token_endpoint: "", 
@@ -109,6 +116,8 @@ function updateUI() {
 	document.getElementById('authorization_endpoint').value = config.authorization_endpoint;
 	document.getElementById('end_session_endpoint').value = config.end_session_endpoint;
 	document.getElementById('token_endpoint').value = config.token_endpoint;
+	document.getElementById('redirectUrl').value = config.redirectUrl;	
+	document.getElementById('extraScopes').value = config.extraScopes;	
 	var urlConfig = window.localStorage.getItem('configUrl' );
 	if(urlConfig == undefined && urlConfig == null) {
 		urlConfig = document.location.origin + "/config.json"		
@@ -122,6 +131,8 @@ function clearUI() {
 	document.getElementById('authorization_endpoint').value = "";
 	document.getElementById('end_session_endpoint').value = "";
 	document.getElementById('token_endpoint').value = "";
+	document.getElementById('redirectUrl').value = document.location.origin + "/index.html";
+	document.getElementById('extraScopes').value = "{client_id}";		
 }
 
 function loadConfig() {
@@ -135,6 +146,9 @@ function saveConfig() {
 	config.authorization_endpoint = document.getElementById('authorization_endpoint').value;
 	config.token_endpoint = document.getElementById('token_endpoint').value;
 	config.end_session_endpoint = document.getElementById('end_session_endpoint').value;
+	config.redirectUrl = document.getElementById('redirectUrl').value;	
+	config.extraScopes = document.getElementById('extraScopes').value;	
+	config.extraScopes = config.extraScopes.replace( " ", "%20");
 	window.localStorage.setItem('config', JSON.stringify(config) );
 	// if we have a metadataUrl, try go getch its details so we can get authorization/token endpoints
 	if ( config.metadataUrl ) {

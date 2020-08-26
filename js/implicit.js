@@ -7,7 +7,8 @@ var settings = {
 // construct the redirect url to the IDP
 function getIdpUrl() {
 	var config = JSON.parse(window.localStorage.getItem('config' ));
-	var scope = settings.scopes + config.client_id;
+	var scope = settings.scopes + config.extraScopes;
+	scope = scope.replace("{client_id}", config.client_id);
 	return config.authorization_endpoint + "?response_type=" + settings.response_type + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl;
 }
 // Send the user to the authorize endpoint for login and authorization
