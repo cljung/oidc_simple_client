@@ -2,16 +2,17 @@
 var settings = {
     scopes: 'openid%20offline_access%20',                       // client_id added before call
     response_type: "code",
+    response_mode: "query",
 }
 
-//var usePKCE = false;
-
+var usePKCE = false;
+var pkceQP = "";
 // construct the redirect url to the IDP
 function getIdpUrl() {
 	var config = JSON.parse(window.localStorage.getItem('config' ));
 	var scope = settings.scopes + config.extraScopes;
 	scope = scope.replace("{client_id}", config.client_id);
-    return config.authorization_endpoint + "?response_type=" + settings.response_type + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl;
+    return config.authorization_endpoint + "?response_type=" + settings.response_type + "&response_mode=" + config.response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl;
 }
 // Send the user to the authorize endpoint for login and authorization. 
 // It will comback with redirect with 'code' as query param and then we do the 2nd step of the Auth Code flow
@@ -24,12 +25,11 @@ function logout() {
     window.location = config.end_session_endpoint + "?post_logout_redirect_uri=" + config.redirectUrl;
 }
 function setAuthCodeUrl(url) {
-	// display the link we are about to redirect to
+    // display the link we are about to redirect to
     document.getElementById('id-auth-link').href = url;
     document.getElementById('id-auth-link').innerHTML = url;      
 }
 window.onload = function() {   
-    var usePKCE = false;
     if ( parseParms(document.location.search.substring(1)).usePKCE === "true" ) {
         usePKCE = true;
         document.title += " with PKCE";
@@ -49,7 +49,8 @@ window.onload = function() {
             var verifier = CX1.generateRandom(64);
             console.log(verifier);
             CX1.deriveChallenge(verifier).then((challange)=>{
-                url += '&code_challenge=' + challange + '&code_challenge_method=S256';
+                pkceQP = '&code_challenge=' + challange + '&code_challenge_method=S256';
+                url += pkceQP;
                 setAuthCodeUrl(url);
             });
             window.localStorage.setItem('code_verifier', verifier );            
@@ -108,7 +109,8 @@ function authcodeRedeem(code) {
         type: 'post',
         data: postData, //'grant_type=authorization_code&client_id=' + config.client_id + '&client_secret=' + config.client_secret + '&redirect_uri=' + config.redirectUrl + '&code=' + code,
         contentType: 'application/x-www-form-urlencoded',
-		success: function(response) {            
+		success: function(response) {      
+            console.log(response);      
             document.getElementById('un-authenticated-msg').style.display = "none";
             document.getElementById('authenticated-msg').style.display = "block";
 			var data = (JSON.stringify(response, null, 2));

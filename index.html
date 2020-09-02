@@ -21,31 +21,34 @@
 		<button type="button" onclick="getConfigFromUrl()">Load Config</button>
 		<br/>
 	  	<label for="configUrl">Config Url: </label>
-  		<input type="texbox" id="configUrl" value=""><br/><br/>
+  		<input type="text" id="configUrl" value=""><br/><br/>
 		
 	  	<label for="client_id">client_id: </label>
-  		<input type="texbox" id="client_id" value=""><br/><br/>
+  		<input type="text" id="client_id" value=""><br/><br/>
 
 	  	<label for="client_secret">client_secret: </label>
   		<input type="password" id="client_secret" value=""><br/><br/>
 
 	  	<label for="redirectUrl">redirectUrl: </label>
-  		<input type="texbox" id="redirectUrl" value=""><br/><br/>
+  		<input type="text" id="redirectUrl" value=""><br/><br/>
 
 	  	<label for="extraScopes">extra scopes: </label>
-  		<input type="texbox" id="extraScopes" value=""><br/><br/>
+  		<input type="text" id="extraScopes" value=""><br/><br/>
+
+	  	<label for="response_mode">response_mode: </label>
+  		<input type="text" id="response_mode" value=""><br/><br/>
 
 	  	<label for="metadataUrl">metadataUrl: </label>
-  		<input type="texbox" id="metadataUrl" value=""><br/><br/>
+  		<input type="text" id="metadataUrl" value=""><br/><br/>
 		  
 	  	<label for="authorization_endpoint">authorization_endpoint: </label>
-  		<input type="texbox" id="authorization_endpoint" value=""><br/><br/>
+  		<input type="text" id="authorization_endpoint" value=""><br/><br/>
 
 	  	<label for="token_endpoint">token_endpoint: </label>
-  		<input type="texbox" id="token_endpoint" value=""><br/><br/>
+  		<input type="text" id="token_endpoint" value=""><br/><br/>
 
 	  	<label for="end_session_endpoint">end_session_endpoint: </label>
-  		<input type="texbox" id="end_session_endpoint" value=""><br/><br/>
+  		<input type="text" id="end_session_endpoint" value=""><br/><br/>
 
 		<button type="button" onclick="saveConfig()">Save Config</button>
 
@@ -79,6 +82,7 @@ var config = {
 	client_id: "",
 	client_secret: "",
 	extraScopes: "{client_id}",
+	response_mode: "query",
 	redirectUrl: document.location.origin + "/index.html",     // index.html will handle redirect back to index_authcode.html
 	authorization_endpoint: "", 
 	token_endpoint: "", 
@@ -118,6 +122,7 @@ function updateUI() {
 	document.getElementById('token_endpoint').value = config.token_endpoint;
 	document.getElementById('redirectUrl').value = config.redirectUrl;	
 	document.getElementById('extraScopes').value = config.extraScopes;	
+	document.getElementById('response_mode').value = config.response_mode;	
 	var urlConfig = window.localStorage.getItem('configUrl' );
 	if(urlConfig == undefined && urlConfig == null) {
 		urlConfig = document.location.origin + "/config.json"		
@@ -132,7 +137,8 @@ function clearUI() {
 	document.getElementById('end_session_endpoint').value = "";
 	document.getElementById('token_endpoint').value = "";
 	document.getElementById('redirectUrl').value = document.location.origin + "/index.html";
-	document.getElementById('extraScopes').value = "{client_id}";		
+	document.getElementById('extraScopes').value = "{client_id}";	
+	document.getElementById('response_mode').value = "query";		
 }
 
 function loadConfig() {
@@ -149,6 +155,7 @@ function saveConfig() {
 	config.redirectUrl = document.getElementById('redirectUrl').value;	
 	config.extraScopes = document.getElementById('extraScopes').value;	
 	config.extraScopes = config.extraScopes.replace( " ", "%20");
+	config.response_mode = document.getElementById('response_mode').value;	
 	window.localStorage.setItem('config', JSON.stringify(config) );
 	// if we have a metadataUrl, try go getch its details so we can get authorization/token endpoints
 	if ( config.metadataUrl ) {
@@ -159,6 +166,9 @@ function loadMetadata(metadataUrl) {
 	$.ajax({
 		url: metadataUrl,
 		type: 'get',
+		headers: {
+        	'Accept': 'application/json'
+    	},
 		success: function(response) {
 			config = JSON.parse(window.localStorage.getItem('config' ));
 			config.authorization_endpoint = response.authorization_endpoint;

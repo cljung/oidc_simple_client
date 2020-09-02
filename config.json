@@ -2,6 +2,7 @@
 	"client_id": "...guid...",
 	"client_secret": "...secret key for webapp, blank for SPA/POKCE...",
 	"extraScopes": "{client_id}",
+	"response_mode": "query",
 	"redirectUrl": "http://localhost:3000/index.html",
 	"authorization_endpoint": "",
 	"token_endpoint": "", 
