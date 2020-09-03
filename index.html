@@ -9,6 +9,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/prism.min.js" async></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/CodeFlask.js/0.1.1/codeflask.min.js" async></script>
 	<script src="https://code.jquery.com/jquery-3.1.1.min.js" axync></script>
+	<script src="/js/FileSaver.js"></script>
 	<style>
 		label { width:200px; display: inline-block; }
 		input { width:600px; display: inline-block; }
@@ -19,11 +20,14 @@
 	<p id="un-authenticated-msg" style="display:none;">
 	  <h1>Config Page</h1>	
 	  <p>
-	  	<a href="https://github.com/cljung/oidc_simple_client" target="_blank">github repo</a>
+	  	Configuration is stored in Browser Local Storage. You can load it via url, via a local file or via pasting in the correct json in the texbox.
+		<br>
+	  	The source code for this webapp can be found in this <a href="https://github.com/cljung/oidc_simple_client" target="_blank">github repo</a>.
 	  </p>
 	  <p>
-		<button type="button" onclick="loadConfigFromSource()">Load Config</button>
-		<button type="button" onclick="clearConfig()">Clear Config</button>
+		<button type="button" onclick="loadConfigFromSource()">Load From Url</button>
+		<button type="button" onclick="clearConfig()">Clear</button>
+		<input type="file" id="configFile"/>
 		<br/>		
 	  	<label for="configUrl">Config Url/Json: </label>
   		<input type="text" id="configUrl" value=""><br/><br/>
@@ -61,7 +65,8 @@
 	  	<label for="end_session_endpoint">end_session_endpoint: </label>
   		<input type="text" id="end_session_endpoint" value=""><br/><br/>
 
-		<button type="button" onclick="saveConfig()">Save Config</button>
+		<button type="button" onclick="saveConfig()">Save</button>
+		<button type="button" onclick="downloadConfig()">Download</button>
 		<button type="button" onclick="runFlow()">Run Flow</button>
 
 	  </p>
@@ -111,6 +116,13 @@ var config = {
 }
 
 window.onload = function() {
+	document.getElementById('configFile').addEventListener('change', function() {
+		var fr=new FileReader(); 
+		fr.onload=function(){ 
+			getConfigFromString(fr.result); 
+		} 
+		fr.readAsText(this.files[0]); 
+	})
 	// if this is not the first time we hit this page, we have the config in browser local storage
 	var data = window.localStorage.getItem('config' );
 	if ( data ) {
@@ -165,6 +177,15 @@ function clearConfig() {
 	window.localStorage.removeItem('configUrl' );
 	clearUI();
 }
+function downloadConfig() {
+	config = JSON.parse(window.localStorage.getItem('config' ));
+	var fileName = 'config.json';
+	var fileToSave = new Blob([JSON.stringify(config,undefined,2)], {
+		type: 'application/json',
+		name: fileName
+	});
+	saveAs(fileToSave, fileName);
+}
 function loadConfig() {
 	config = JSON.parse(window.localStorage.getItem('config' ));
 	updateUI();
@@ -216,12 +237,16 @@ function loadConfigFromSource() {
 	if ( urlConfig.startsWith("http") ) {
 		getConfigFromUrl(urlConfig);
 	} else {
-		config = JSON.parse(urlConfig); // this will crash if invalid json so we skip next lines
-		window.localStorage.setItem('config', JSON.stringify(config) );
-		window.localStorage.setItem('configUrl', urlConfig );
-		updateUI();
-		loadMetadata( config.metadataUrl );
+		getConfigFromString(urlConfig);
 	}
+}
+
+function getConfigFromString(json) {
+	config = JSON.parse(json); // this will crash if invalid json so we skip next lines
+	window.localStorage.setItem('config', JSON.stringify(config) );
+	window.localStorage.setItem('configUrl', json );
+	updateUI();
+	loadMetadata( config.metadataUrl );
 }
 function getConfigFromUrl(urlConfig) {
 	clearUI();
