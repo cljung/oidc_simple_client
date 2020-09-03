@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>OAuth Flows Simple Test App</title>
+	<title>OAuth Flows Simple Test Client</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/themes/prism.min.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/CodeFlask.js/0.1.1/codeflask.min.css">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/prism.min.js" async></script>
@@ -17,11 +17,15 @@
   </head>
   <body>
 	<p id="un-authenticated-msg" style="display:none;">
-	  <h1>Start page</h1>	
+	  <h1>Config Page</h1>	
 	  <p>
-		<button type="button" onclick="getConfigFromUrl()">Load Config</button>
-		<br/>
-	  	<label for="configUrl">Config Url: </label>
+	  	<a href="https://github.com/cljung/oidc_simple_client" target="_blank">github repo</a>
+	  </p>
+	  <p>
+		<button type="button" onclick="loadConfigFromSource()">Load Config</button>
+		<button type="button" onclick="clearConfig()">Clear Config</button>
+		<br/>		
+	  	<label for="configUrl">Config Url/Json: </label>
   		<input type="text" id="configUrl" value=""><br/><br/>
 		
 	  	<label for="client_id">client_id: </label>
@@ -61,15 +65,6 @@
 		<button type="button" onclick="runFlow()">Run Flow</button>
 
 	  </p>
-	  <!--
-	  <p>  
-		<a href="/index_flow.html">Implicit Grant Flow</a>
-		<br/><br/>
-		<a href="/index_flow.html">Auth Code Flow</a>
-		<br/><br/>
-		<a href="/index_flow.html?PKCE=true">Auth Code Flow with PKCE</a>
-  	  </p>
-		-->
 	</p>
 
   </body>
@@ -126,10 +121,10 @@ window.onload = function() {
 	// possible redirects. code == auth code flow. hash == implicit grant
 	var code = parseParms(document.location.search.substring(1)).code;
 	if ( code ) {
-		document.location = "/index_flow.html" + document.location.search;
+		document.location = "/runflow.html" + document.location.search;
 	} 
 	if ( document.location.hash ) {
-		document.location = "/index_flow.html" + document.location.hash;
+		document.location = "/runflow.html" + document.location.hash;
 	}
 }
 
@@ -165,6 +160,11 @@ function clearUI() {
 	document.getElementById("pkce").checked = false;
 }
 
+function clearConfig() {
+	window.localStorage.removeItem('config' );
+	window.localStorage.removeItem('configUrl' );
+	clearUI();
+}
 function loadConfig() {
 	config = JSON.parse(window.localStorage.getItem('config' ));
 	updateUI();
@@ -189,7 +189,7 @@ function saveConfig() {
 }
 function runFlow() {
 	saveConfig();
-	document.location = "/index_flow.html";
+	document.location = "/runflow.html";
 }
 function loadMetadata(metadataUrl) {
 	$.ajax({
@@ -211,8 +211,19 @@ function loadMetadata(metadataUrl) {
 	});	
 }
 
-function getConfigFromUrl() {
+function loadConfigFromSource() {
 	var urlConfig = document.getElementById('configUrl').value;
+	if ( urlConfig.startsWith("http") ) {
+		getConfigFromUrl(urlConfig);
+	} else {
+		config = JSON.parse(urlConfig); // this will crash if invalid json so we skip next lines
+		window.localStorage.setItem('config', JSON.stringify(config) );
+		window.localStorage.setItem('configUrl', urlConfig );
+		updateUI();
+		loadMetadata( config.metadataUrl );
+	}
+}
+function getConfigFromUrl(urlConfig) {
 	clearUI();
 	$.ajax({
         url: urlConfig,
