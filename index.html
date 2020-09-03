@@ -12,6 +12,7 @@
 	<style>
 		label { width:200px; display: inline-block; }
 		input { width:600px; display: inline-block; }
+		input#pkce { width:auto; display: inline-block; }
 	</style>
   </head>
   <body>
@@ -32,8 +33,14 @@
 	  	<label for="redirectUrl">redirectUrl: </label>
   		<input type="text" id="redirectUrl" value=""><br/><br/>
 
-	  	<label for="extraScopes">extra scopes: </label>
-  		<input type="text" id="extraScopes" value=""><br/><br/>
+	  	<label for="scope">scope: </label>
+  		<input type="text" id="scope" value=""><br/><br/>
+
+	  	<label for="response_type">response_type: </label>
+  		<input type="text" id="response_type" value=""><br/><br/>
+
+	  	<label for="pkce">PKCE: </label>		  
+  		<input type="checkbox" id="pkce" onclick="onPkce()"><br/><br/>
 
 	  	<label for="response_mode">response_mode: </label>
   		<input type="text" id="response_mode" value=""><br/><br/>
@@ -51,19 +58,35 @@
   		<input type="text" id="end_session_endpoint" value=""><br/><br/>
 
 		<button type="button" onclick="saveConfig()">Save Config</button>
+		<button type="button" onclick="runFlow()">Run Flow</button>
 
 	  </p>
+	  <!--
 	  <p>  
-		<a href="/index_implicitgrant.html">Implicit Grant Flow</a>
+		<a href="/index_flow.html">Implicit Grant Flow</a>
 		<br/><br/>
-		<a href="/index_authcode.html">Auth Code Flow</a>
+		<a href="/index_flow.html">Auth Code Flow</a>
 		<br/><br/>
-		<a href="/index_authcode.html?usePKCE=true">Auth Code Flow with PKCE</a>
+		<a href="/index_flow.html?PKCE=true">Auth Code Flow with PKCE</a>
   	  </p>
+		-->
 	</p>
 
   </body>
   <script>
+function onPkce() {
+	config = JSON.parse(window.localStorage.getItem('config' ));
+	config.PKCE = document.getElementById("pkce").checked;
+	if ( config.PKCE == true ) {
+		var response_type = document.getElementById("response_type").value;
+		if ( response_type.indexOf("code") == -1) {
+			config.response_type = "code " + response_type;
+			document.getElementById('response_type').value = config.response_type;
+			alert( "PKCE is an Auth Code flow and requires 'code' in response_type");
+		}
+	}
+	window.localStorage.setItem('config', JSON.stringify(config) );
+}  
 function parseParms(str) {
 	var pieces = str.split("&"), data = {}, i, parts;
 	// process each query pair
@@ -81,8 +104,10 @@ function parseParms(str) {
 var config = {
 	client_id: "",
 	client_secret: "",
-	extraScopes: "{client_id}",
+	scope: "openid offline_access {client_id}",
+	response_type: "code",
 	response_mode: "query",
+	PKCE: false,
 	redirectUrl: document.location.origin + "/index.html",     // index.html will handle redirect back to index_authcode.html
 	authorization_endpoint: "", 
 	token_endpoint: "", 
@@ -101,15 +126,10 @@ window.onload = function() {
 	// possible redirects. code == auth code flow. hash == implicit grant
 	var code = parseParms(document.location.search.substring(1)).code;
 	if ( code ) {
-		var verifier = window.localStorage.getItem('code_verifier' );
-		if(verifier !== undefined && verifier !== null){
-			document.location = "/index_authcode.html" + document.location.search + "&usePKCE=true";
-		} else {
-			document.location = "/index_authcode.html" + document.location.search;
-		}
+		document.location = "/index_flow.html" + document.location.search;
 	} 
 	if ( document.location.hash ) {
-		document.location = "/index_implicitgrant.html" + document.location.hash;
+		document.location = "/index_flow.html" + document.location.hash;
 	}
 }
 
@@ -121,8 +141,10 @@ function updateUI() {
 	document.getElementById('end_session_endpoint').value = config.end_session_endpoint;
 	document.getElementById('token_endpoint').value = config.token_endpoint;
 	document.getElementById('redirectUrl').value = config.redirectUrl;	
-	document.getElementById('extraScopes').value = config.extraScopes;	
+	document.getElementById('scope').value = config.scope;	
+	document.getElementById('response_type').value = config.response_type;	
 	document.getElementById('response_mode').value = config.response_mode;	
+	document.getElementById("pkce").checked = config.PKCE;
 	var urlConfig = window.localStorage.getItem('configUrl' );
 	if(urlConfig == undefined && urlConfig == null) {
 		urlConfig = document.location.origin + "/config.json"		
@@ -137,8 +159,10 @@ function clearUI() {
 	document.getElementById('end_session_endpoint').value = "";
 	document.getElementById('token_endpoint').value = "";
 	document.getElementById('redirectUrl').value = document.location.origin + "/index.html";
-	document.getElementById('extraScopes').value = "{client_id}";	
+	document.getElementById('scope').value = "openid offline_access {client_id}";	
+	document.getElementById('response_type').value = "code";		
 	document.getElementById('response_mode').value = "query";		
+	document.getElementById("pkce").checked = false;
 }
 
 function loadConfig() {
@@ -153,14 +177,19 @@ function saveConfig() {
 	config.token_endpoint = document.getElementById('token_endpoint').value;
 	config.end_session_endpoint = document.getElementById('end_session_endpoint').value;
 	config.redirectUrl = document.getElementById('redirectUrl').value;	
-	config.extraScopes = document.getElementById('extraScopes').value;	
-	config.extraScopes = config.extraScopes.replace( " ", "%20");
+	config.scope = document.getElementById('scope').value;	
+	config.response_type = document.getElementById('response_type').value;	
 	config.response_mode = document.getElementById('response_mode').value;	
+	config.PKCE = document.getElementById("pkce").checked;
 	window.localStorage.setItem('config', JSON.stringify(config) );
 	// if we have a metadataUrl, try go getch its details so we can get authorization/token endpoints
 	if ( config.metadataUrl ) {
 		loadMetadata(config.metadataUrl );
 	}
+}
+function runFlow() {
+	saveConfig();
+	document.location = "/index_flow.html";
 }
 function loadMetadata(metadataUrl) {
 	$.ajax({
