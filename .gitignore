@@ -3,6 +3,8 @@ demo*/
 node_modules/
 tmp/
 
+tenants/
+
 # 
 *.pfx
 *.cer
