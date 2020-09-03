@@ -4,6 +4,7 @@ node_modules/
 tmp/
 
 tenants/
+config/
 
 # 
 *.pfx

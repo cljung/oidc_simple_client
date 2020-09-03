@@ -147,6 +147,9 @@ function updateUI() {
 	document.getElementById('authorization_endpoint').value = config.authorization_endpoint;
 	document.getElementById('end_session_endpoint').value = config.end_session_endpoint;
 	document.getElementById('token_endpoint').value = config.token_endpoint;
+	if ( config.redirectUrl.startsWith("{{host}}")) {
+		config.redirectUrl = config.redirectUrl.replace("{{host}}", document.location.origin);
+	}
 	document.getElementById('redirectUrl').value = config.redirectUrl;	
 	document.getElementById('scope').value = config.scope;	
 	document.getElementById('response_type').value = config.response_type;	
