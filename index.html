@@ -21,8 +21,12 @@
 	  <h1>Config Page</h1>	
 	  <p>
 	  	Configuration is stored in Browser Local Storage. You can load it via url, via a local file or via pasting in the correct json in the texbox.
-		<br>
+		<br/>
+		If you fill in the config from scratch, the *-marked items are mandatory.
+		<br/>
 	  	The source code for this webapp can be found in this <a href="https://github.com/cljung/oidc_simple_client" target="_blank">github repo</a>.
+		<br/>
+		No data is stored on the server. Everything happens in the browser. Also, no OAuth client library is used. It is all implemented in javascript.  
 	  </p>
 	  <p>
 		<button type="button" onclick="loadConfigFromSource()">Load From Url</button>
@@ -32,19 +36,19 @@
 	  	<label for="configUrl">Config Url/Json: </label>
   		<input type="text" id="configUrl" value=""><br/><br/>
 		
-	  	<label for="client_id">client_id: </label>
+	  	<label for="client_id">client_id*: </label>
   		<input type="text" id="client_id" value=""><br/><br/>
 
 	  	<label for="client_secret">client_secret: </label>
   		<input type="password" id="client_secret" value=""><br/><br/>
 
-	  	<label for="redirectUrl">redirectUrl: </label>
+	  	<label for="redirectUrl">redirectUrl*: </label>
   		<input type="text" id="redirectUrl" value=""><br/><br/>
 
-	  	<label for="scope">scope: </label>
+	  	<label for="scope">scope*: </label>
   		<input type="text" id="scope" value=""><br/><br/>
 
-	  	<label for="response_type">response_type: </label>
+	  	<label for="response_type">response_type*: </label>
   		<input type="text" id="response_type" value=""><br/><br/>
 
 	  	<label for="pkce">PKCE: </label>		  
@@ -53,7 +57,7 @@
 	  	<label for="response_mode">response_mode: </label>
   		<input type="text" id="response_mode" value=""><br/><br/>
 
-	  	<label for="metadataUrl">metadataUrl: </label>
+	  	<label for="metadataUrl">metadataUrl*: </label>
   		<input type="text" id="metadataUrl" value=""><br/><br/>
 		  
 	  	<label for="authorization_endpoint">authorization_endpoint: </label>
