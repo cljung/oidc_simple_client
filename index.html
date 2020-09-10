@@ -220,6 +220,9 @@ function runFlow() {
 	document.location = "/runflow.html";
 }
 function loadMetadata(metadataUrl) {
+	if ( metadataUrl === undefined || metadataUrl === "") {
+		return;
+	}
 	$.ajax({
 		url: metadataUrl,
 		type: 'get',
