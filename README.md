@@ -4,8 +4,11 @@ This is a simple OpenID Connect/OAuth2 html/javascript client that you can use t
 * Implicit Grant
 * Auth Code flow
 * Auth Code flow with PKCE
+* ROPC
 
 It uses no library, like MSAL, and implements all interactions with the Identity Provider using javascript
+
+A live version of this webapp exists here [https://cljungoauthtest.azurewebsites.net/](https://cljungoauthtest.azurewebsites.net/)
 
 ## Configuration
 
@@ -23,6 +26,11 @@ Items you may change are:
 {
 	"client_id": "...guid...",
 	"client_secret": "...secret key for webapp, blank for SPA/POKCE...",
+	"scope": "openid offline_access {clienty_id}",
+	"response_type": "code",
+	"response_mode": "query",
+	"PKCE": false,
+	"ROPC": false,
 	"redirectUrl": "http://localhost:3000/index.html",
 	"authorization_endpoint": "",
 	"token_endpoint": "", 
@@ -30,7 +38,6 @@ Items you may change are:
 	"metadataUrl": "https://yourtenant.b2clogin.com/yourtenant.onmicrosoft.com/B2C_1A_signup_signin/v2.0/.well-known/openid-configuration"
 }
 ```
-
 ## Running it
 
 You can start the webapp easily using Node or Python (see [start-nodejs.ps1](start-nodejs.ps1) and [start-python.ps1](start-python.ps1) for details). 
