@@ -1,16 +1,23 @@
 
 var usePKCE = false;
 var pkceQP = "";
+var useROPC = false;
 // construct the redirect url to the IDP
 function getIdpUrl() {
-	var config = JSON.parse(window.localStorage.getItem('config' ));
-	scope = config.scope.replace("{client_id}", config.client_id);
-    return config.authorization_endpoint + "?response_type=" + config.response_type + "&response_mode=" + config.response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl;
+    var config = JSON.parse(window.localStorage.getItem('config' ));
+    scope = config.scope.replace("{client_id}", config.client_id);
+    if ( config.ROPC == true ) {
+        return config.token_endpoint;
+    } else {
+        return config.authorization_endpoint + "?response_type=" + config.response_type + "&response_mode=" + config.response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl;
+    }
 }
 // Send the user to the authorize endpoint for login and authorization. 
 // It will comback with redirect with 'code' as query param and then we do the 2nd step of the Auth Code flow
 function authorize() {
-    window.location = document.getElementById('id-auth-link').href;
+    if ( useROPC ) 
+         doROPC();         
+    else window.location = document.getElementById('id-auth-link').href;
 }
 
 function logout() {
@@ -19,13 +26,17 @@ function logout() {
 }
 function setAuthCodeUrl(url) {
     // display the link we are about to redirect to
-    document.getElementById('id-auth-link').href = url;
+    if ( useROPC )
+         document.getElementById('id-auth-link').href = "#"; // you can't navigate to ROPC. must be a POST
+    else document.getElementById('id-auth-link').href = url;
     document.getElementById('id-auth-link').innerHTML = url;      
 }
 function setFlowTitle() {
     var title = "";
 	var config = JSON.parse(window.localStorage.getItem('config' ));
     usePKCE = config.PKCE;
+    useROPC = config.ROPC;
+    document.getElementById('ropc-panel').style.display = "none";   
     if ( config.response_type.indexOf("code") >= 0) {
         if ( config.PKCE == true ) {
             title = "Auth Code Flow with PKCE";
@@ -33,7 +44,24 @@ function setFlowTitle() {
             title = "Auth Code Flow";
         }
     } else {
-        title = "Implicit Grant Flow";
+        if ( config.ROPC == true ) {
+            title = "ROPC Flow";            
+            document.getElementById('ropc-panel').style.display = "block";   
+            var site = document.location.protocol + "//" + document.location.host;
+            document.getElementById("help-msg").innerHTML = "For ROPC, you need to enter userid and password and press the Login button";
+            /*
+            "<br/><br/>" + 
+            "For ROPC to work with Azure AD B2C, you need to add the Chrome extension 'Allow CORS: Access-Control-Allow-Origin' and add <strong>" + site + "</strong> since the B2C response for ROPC will ble blocked by CORS policy." + 
+            "<br/>" + 
+            "Do not add 'on all sites' in the extension as that would be a security risk.";       
+            */
+            scope = config.scope.replace("{client_id}", config.client_id);
+            document.getElementById('client_id').value = config.client_id;
+            document.getElementById('response_type').value = config.response_type;
+            document.getElementById('scope').value = scope;                    
+        } else {
+            title = "Implicit Grant Flow";
+        }
     }
     document.title = title;
     document.getElementById('id-h1-title').innerHTML = title; 
@@ -60,7 +88,9 @@ window.onload = function() {
         authcodeRedeem( code );
         return;
     } 
-
+    if ( useROPC ) {
+        document.getElementById('ropcForm').action = url;
+    }
     // callback option 2 - redirect with #access_token= etc
 	if ( document.location.hash ) {
         var access_token = getAccessToken();
@@ -161,6 +191,7 @@ function authcodeRedeem(code) {
 	$.ajax({
         url: config.token_endpoint,
         type: 'post',
+        cache: false,
         data: postData, //'grant_type=authorization_code&client_id=' + config.client_id + '&client_secret=' + config.client_secret + '&redirect_uri=' + config.redirectUrl + '&code=' + code,
         contentType: 'application/x-www-form-urlencoded',
 		success: function(response) {      
@@ -173,3 +204,29 @@ function authcodeRedeem(code) {
 	});
 }
 
+function doROPC() {
+    document.getElementById("ropcForm").submit();
+    return;
+
+    var config = JSON.parse(window.localStorage.getItem('config' ));    
+    var uid = document.getElementById('username').value;	
+    var pwd = document.getElementById('password').value;	
+    scope = config.scope.replace("{client_id}", config.client_id);
+    var postData = 'username=' + uid + '&password=' + pwd + '&grant_type=password&client_id=' + config.client_id + '&response_type=' + config.response_type + '&scope=' + scope;
+	$.ajax({
+        url: config.token_endpoint,
+        type: 'post',
+        data: postData, 
+        cache: false,
+        contentType: 'application/x-www-form-urlencoded',
+        crossDomain: true,
+		success: function(response) {      
+            console.log(response);      
+            //var data = (JSON.stringify(response, null, 2));
+            uiUpdateTokens( response.id_token, response.access_token);
+        },error: function( jqXhr, textStatus, errorThrown ){
+            uiUpdateError( jqXhr.responseText );
+        }
+    });
+
+}

@@ -8,12 +8,13 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/CodeFlask.js/0.1.1/codeflask.min.css">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/prism.min.js" async></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/CodeFlask.js/0.1.1/codeflask.min.js" async></script>
-	<script src="https://code.jquery.com/jquery-3.1.1.min.js" axync></script>
+	<script src="/js/jquery-3.5.1.js" axync></script>
 	<script src="/js/FileSaver.js"></script>
 	<style>
 		label { width:200px; display: inline-block; }
 		input { width:600px; display: inline-block; }
 		input#pkce { width:auto; display: inline-block; }
+		input#ropc { width:auto; display: inline-block; }
 	</style>
   </head>
   <body>
@@ -54,6 +55,9 @@
 	  	<label for="pkce">PKCE: </label>		  
   		<input type="checkbox" id="pkce" onclick="onPkce()"><br/><br/>
 
+	  	<label for="ropc">ROPC: </label>		  
+  		<input type="checkbox" id="ropc" onclick="onRopc()"><br/><br/>
+
 	  	<label for="response_mode">response_mode: </label>
   		<input type="text" id="response_mode" value=""><br/><br/>
 
@@ -82,12 +86,23 @@ function onPkce() {
 	config = JSON.parse(window.localStorage.getItem('config' ));
 	config.PKCE = document.getElementById("pkce").checked;
 	if ( config.PKCE == true ) {
+		document.getElementById("ropc").checked = false;
 		var response_type = document.getElementById("response_type").value;
 		if ( response_type.indexOf("code") == -1) {
 			config.response_type = "code " + response_type;
 			document.getElementById('response_type').value = config.response_type;
 			alert( "PKCE is an Auth Code flow and requires 'code' in response_type");
 		}
+	}
+	window.localStorage.setItem('config', JSON.stringify(config) );
+}  
+function onRopc() {
+	config = JSON.parse(window.localStorage.getItem('config' ));
+	config.ROPC = document.getElementById("ropc").checked;
+	if ( config.ROPC == true ) {
+		document.getElementById("pkce").checked = false;
+		config.response_type = "token id_token";
+		document.getElementById('response_type').value = config.response_type;
 	}
 	window.localStorage.setItem('config', JSON.stringify(config) );
 }  
@@ -112,6 +127,7 @@ var config = {
 	response_type: "code",
 	response_mode: "query",
 	PKCE: false,
+	ROPC: false,
 	redirectUrl: document.location.origin + "/index.html",     // index.html will handle redirect back to index_authcode.html
 	authorization_endpoint: "", 
 	token_endpoint: "", 
@@ -159,6 +175,7 @@ function updateUI() {
 	document.getElementById('response_type').value = config.response_type;	
 	document.getElementById('response_mode').value = config.response_mode;	
 	document.getElementById("pkce").checked = config.PKCE;
+	document.getElementById("ropc").checked = config.ROPC;
 	var urlConfig = window.localStorage.getItem('configUrl' );
 	if(urlConfig == undefined && urlConfig == null) {
 		urlConfig = document.location.origin + "/config.json"		
@@ -177,6 +194,7 @@ function clearUI() {
 	document.getElementById('response_type').value = "code";		
 	document.getElementById('response_mode').value = "query";		
 	document.getElementById("pkce").checked = false;
+	document.getElementById("ropc").checked = false;
 }
 
 function clearConfig() {
@@ -209,6 +227,7 @@ function saveConfig() {
 	config.response_type = document.getElementById('response_type').value;	
 	config.response_mode = document.getElementById('response_mode').value;	
 	config.PKCE = document.getElementById("pkce").checked;
+	config.ROPC = document.getElementById("ropc").checked;
 	window.localStorage.setItem('config', JSON.stringify(config) );
 	// if we have a metadataUrl, try go getch its details so we can get authorization/token endpoints
 	if ( config.metadataUrl ) {

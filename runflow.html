@@ -11,16 +11,22 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/prism.min.js" async></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/CodeFlask.js/0.1.1/codeflask.min.js" async></script>
 	<script src="https://code.jquery.com/jquery-3.1.1.min.js" axync></script>
-	<script src="./js/jquery.min.js"></script>
+	<script src="./js/jquery-3.5.1.js"></script>
 	<script src="/js/flow.js"></script>
 	<script src="/js/base64.js"></script>
 	<script src="/js/crypto_utils.js"></script>
+	<style>
+		label { width:100px; display: inline-block; }
+		input { width:200px; display: inline-block; }
+	</style>
 </head>
 <body>
   <body>
 	<p id="un-authenticated-msg" style="display:none;">
 	  <h1 id="id-h1-title">Auth Code Flow login</h1>
+	  <div id="help-msg">
 	  Click the button or the link below to log in! You can also copy the link and paste it in the browser url and navigate there.
+	  </div>
 	  <br>
 	  <button type="button" onclick="authorize()">Log in</button><a href="/index.html">Start Page</a>
 	</p>
@@ -30,6 +36,21 @@
 
 	<p id="idp-info-msg" style="display:block;">
 		<a id="id-auth-link" href="#">#</a>
+	</p>
+
+	<p id="ropc-panel" style="display:none;">
+		<form id="ropcForm" action="#" method="post">
+			<label for="username">Userid: </label>
+			<input type="text" id="username" name="username"><br><br/>
+			<label for="password">Password: </label>
+			<input type="password" id="password" name="password"><br><br/>
+
+			<input type="hidden" name="grant_type" value="password"><br>
+			<input type="hidden" name="client_id" id="client_id" value=""><br>
+			<input type="hidden" name="response_type" id="response_type" value=""><br>
+			<input type="hidden" name="scope" id="scope" value=""><br><br/>
+		</form>
+
 	</p>
 
 	<p id="id-token-msg" style="display:none;">		
