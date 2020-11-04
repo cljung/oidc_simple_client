@@ -5,12 +5,26 @@ var useROPC = false;
 // construct the redirect url to the IDP
 function getIdpUrl() {
     var config = JSON.parse(window.localStorage.getItem('config' ));
-    scope = config.scope.replace("{client_id}", config.client_id);
+    //scope = config.scope.replace("{client_id}", config.client_id);
+    scope = getScope(config, "GET");
     if ( config.ROPC == true ) {
         return config.token_endpoint;
     } else {
         return config.authorization_endpoint + "?response_type=" + config.response_type + "&response_mode=" + config.response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl;
     }
+}
+
+function getScope(config, forMethod) {
+    var scope = config.scope.replace("{client_id}", config.client_id);
+    var parts = scope.split(" ");
+    var index;
+    for (index = 0; index < parts.length; ++index) {
+        parts[index] = encodeURIComponent(parts[index]);
+    }
+    if ( forMethod == "POST" )
+         scope = parts.join(" ");
+    else scope = parts.join("+");
+    return scope;
 }
 // Send the user to the authorize endpoint for login and authorization. 
 // It will comback with redirect with 'code' as query param and then we do the 2nd step of the Auth Code flow
@@ -150,7 +164,7 @@ function getAccessToken() {
 	return hash.access_token;
 }
 
-function uiUpdateTokens( id_token, access_token ) {
+function uiUpdateTokens( id_token, access_token, refresh_token ) {
     document.getElementById('un-authenticated-msg').style.display = "none";
     document.getElementById('authenticated-msg').style.display = "block";
     if (id_token) {
@@ -166,6 +180,13 @@ function uiUpdateTokens( id_token, access_token ) {
         document.getElementById('access-token-msg').style.display = "block";
     } else {
         document.getElementById('access-token-msg').style.display = "none";
+    }        
+    if (refresh_token) {
+        var btnRefresh = "<button type=\"button\" id=\"idRefreshToken\" onclick=\"refresAccessToken('" + refresh_token + "')\">refresh Token</button>";
+        document.getElementById('refresh-token-msg').innerHTML = "<h2>Refresh Token</h2>" + "<p>" + refresh_token + "<br/><br/>" + btnRefresh + "</p>";
+        document.getElementById('refresh-token-msg').style.display = "block";
+    } else {
+        document.getElementById('refresh-token-msg').style.display = "none";
     }        
 }
 function uiUpdateError( error_message ) {
@@ -195,9 +216,9 @@ function authcodeRedeem(code) {
         data: postData, //'grant_type=authorization_code&client_id=' + config.client_id + '&client_secret=' + config.client_secret + '&redirect_uri=' + config.redirectUrl + '&code=' + code,
         contentType: 'application/x-www-form-urlencoded',
 		success: function(response) {      
-            console.log(response);      
+            //console.log(response);      
             //var data = (JSON.stringify(response, null, 2));
-            uiUpdateTokens( response.id_token, response.access_token);
+            uiUpdateTokens( response.id_token, response.access_token, response.refresh_token);
         },error: function( jqXhr, textStatus, errorThrown ){
             uiUpdateError( jqXhr.responseText );
         }
@@ -223,10 +244,31 @@ function doROPC() {
 		success: function(response) {      
             console.log(response);      
             //var data = (JSON.stringify(response, null, 2));
-            uiUpdateTokens( response.id_token, response.access_token);
+            uiUpdateTokens( response.id_token, response.access_token, response.refresh_token);
         },error: function( jqXhr, textStatus, errorThrown ){
             uiUpdateError( jqXhr.responseText );
         }
     });
 
+}
+
+// make a HTTP POST call to the token endpoint and redeem the code
+function refresAccessToken(refreshToken) {
+    var config = JSON.parse(window.localStorage.getItem('config' ));
+    var scope = getScope(config, "POST");
+    var postData = 'grant_type=refresh_token&client_id=' + config.client_id + "&scope=" + scope + /*'&redirect_uri=' + config.redirectUrl +*/ '&refresh_token=' + refreshToken;
+	$.ajax({
+        url: config.token_endpoint,
+        type: 'post',
+        cache: false,
+        data: postData, 
+        contentType: 'application/x-www-form-urlencoded;charset=utf-8',
+		success: function(response) {      
+            console.log(response);      
+            //var data = (JSON.stringify(response, null, 2));
+            uiUpdateTokens( response.id_token, response.access_token, response.refresh_token);
+        },error: function( jqXhr, textStatus, errorThrown ){
+            uiUpdateError( jqXhr.responseText );
+        }
+	});
 }
