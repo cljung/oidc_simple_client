@@ -38,7 +38,7 @@
 		<a id="id-auth-link" href="#">#</a>
 	</p>
 
-	<p id="ropc-panel" style="display:none;">
+	<div id="ropc-panel" style="display:none;">
 		<form id="ropcForm" action="#" method="post">
 			<label for="username">Userid: </label>
 			<input type="text" id="username" name="username"><br><br/>
@@ -51,13 +51,16 @@
 			<input type="hidden" name="scope" id="scope" value=""><br><br/>
 		</form>
 
-	</p>
+	</div>
 
 	<p id="id-token-msg" style="display:none;">		
 	  id token: 
 	</p>
 	<p id="access-token-msg" style="display:none;">
 	  access token: 
+	</p>
+	<p id="refresh-token-msg" style="display:none;">
+	  refresh token: 
 	</p>
 	<p id="error-msg" style="display:none;">
 	  

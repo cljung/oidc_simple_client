@@ -10,7 +10,8 @@ function getIdpUrl() {
     if ( config.ROPC == true ) {
         return config.token_endpoint;
     } else {
-        return config.authorization_endpoint + "?response_type=" + config.response_type + "&response_mode=" + config.response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl;
+        var nonce = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 36);
+        return config.authorization_endpoint + "?response_type=" + config.response_type + "&response_mode=" + config.response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl + "&nonce=" + nonce;
     }
 }
 
