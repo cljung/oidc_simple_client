@@ -49,6 +49,9 @@
 	  	<label for="scope">scope*: </label>
   		<input type="text" id="scope" value=""><br/><br/>
 
+	  	<label for="resource">resource: </label>
+  		<input type="text" id="resource" value=""><br/><br/>
+
 	  	<label for="response_type">response_type*: </label>
   		<input type="text" id="response_type" value=""><br/><br/>
 
@@ -125,6 +128,7 @@ var config = {
 	client_secret: "",
 	scope: "openid offline_access {client_id}",
 	response_type: "code",
+	resource: "",
 	response_mode: "query",
 	PKCE: false,
 	ROPC: false,
@@ -155,9 +159,14 @@ window.onload = function() {
 	if ( code ) {
 		document.location = "/runflow.html" + document.location.search;
 	} 
-	if ( document.location.hash ) {
+	if ( document.location.hash) {
 		document.location = "/runflow.html" + document.location.hash;
 	}
+	var id_token = parseParms(document.location.search.substring(1)).id_token;
+	var access_token = parseParms(document.location.search.substring(1)).access_token;
+	if ( id_token || access_token ) {
+		document.location = "/runflow.html" + document.location.search;
+	} 
 }
 
 function updateUI() {
@@ -173,6 +182,7 @@ function updateUI() {
 	document.getElementById('redirectUrl').value = config.redirectUrl;	
 	document.getElementById('scope').value = config.scope;	
 	document.getElementById('response_type').value = config.response_type;	
+	document.getElementById('resource').value = config.resource;	
 	document.getElementById('response_mode').value = config.response_mode;	
 	document.getElementById("pkce").checked = config.PKCE;
 	document.getElementById("ropc").checked = config.ROPC;
@@ -192,6 +202,7 @@ function clearUI() {
 	document.getElementById('redirectUrl').value = document.location.origin + "/index.html";
 	document.getElementById('scope').value = "openid offline_access {client_id}";	
 	document.getElementById('response_type').value = "code";		
+	document.getElementById('resource').value = "";		
 	document.getElementById('response_mode').value = "query";		
 	document.getElementById("pkce").checked = false;
 	document.getElementById("ropc").checked = false;
@@ -225,6 +236,7 @@ function saveConfig() {
 	config.redirectUrl = document.getElementById('redirectUrl').value;	
 	config.scope = document.getElementById('scope').value;	
 	config.response_type = document.getElementById('response_type').value;	
+	config.resource = document.getElementById('resource').value;	
 	config.response_mode = document.getElementById('response_mode').value;	
 	config.PKCE = document.getElementById("pkce").checked;
 	config.ROPC = document.getElementById("ropc").checked;

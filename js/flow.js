@@ -11,7 +11,15 @@ function getIdpUrl() {
         return config.token_endpoint;
     } else {
         var nonce = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 36);
-        return config.authorization_endpoint + "?response_type=" + config.response_type + "&response_mode=" + config.response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl + "&nonce=" + nonce;
+        var resource = "";
+        if ( config.resource.length > 0 ) {
+            resource = "&resource=" + config.resource;
+        }
+        var response_mode = "";
+        if ( config.response_mode.length > 0 ) {
+            response_mode = "&response_mode=" + config.response_mode;
+        }
+        return config.authorization_endpoint + "?response_type=" + config.response_type + response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl + "&nonce=" + nonce + resource;
     }
 }
 
@@ -96,6 +104,9 @@ window.onload = function() {
     // callback option 1 - redirect with code=X
     // if we have 'code' as a query param, then this is the redirect and we need to redeem the code to get tokens
     var code = parseParms(document.location.search.substring(1)).code;
+    if ( !code ) {
+        code = parseParms(document.location.hash.substring(1)).code;
+    }
     url = getIdpUrl();
     setAuthCodeUrl(url);
     if ( code ) {
@@ -113,7 +124,13 @@ window.onload = function() {
         uiUpdateTokens( id_token, access_token);
         return;
     }
-        
+    // callback option 3 - redirect with ?id_token
+    var id_token = parseParms(document.location.search.substring(1)).id_token;
+    if ( id_token ) {
+        var access_token = parseParms(document.location.search.substring(1)).access_token;
+        uiUpdateTokens( id_token, access_token );
+        return;
+    }        
     // If we are to use PKCE, then generate the verifier and the challange and modify the authorize url
     if ( usePKCE ) {
         var CX1 = new DefaultCrypto();
@@ -216,6 +233,7 @@ function authcodeRedeem(code) {
         cache: false,
         data: postData, //'grant_type=authorization_code&client_id=' + config.client_id + '&client_secret=' + config.client_secret + '&redirect_uri=' + config.redirectUrl + '&code=' + code,
         contentType: 'application/x-www-form-urlencoded',
+        dataType: 'application/x-www-form-urlencoded',
 		success: function(response) {      
             //console.log(response);      
             //var data = (JSON.stringify(response, null, 2));
