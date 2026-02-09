@@ -1,0 +1,43 @@
+html {
+    font-size: 16px;
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+}
+body {
+    background-color: lightgray;
+}
+button, .fileUpload {
+    background-clip: border-box;
+    display: inline-block;
+    padding: 0 12px;
+    height: 40px;
+    font-size: 16px;
+    line-height: 16px;
+    text-align: center;
+    vertical-align: middle;
+    /*border: none;*/
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    text-underline-offset: 0.25em;
+    transition: background 150ms;
+    user-select: none;
+    touch-action: manipulation;
+    color: white;
+    background-color: darkgray;
+}
+input[type=text], input[type=password] {
+    padding: 0 12px;
+    height: 30px;
+    font-size: 14px;
+    line-height: 16px;
+    border-radius: 4px;
+}
+input[type=file] {
+    display:none;
+}
+.fileUpload {
+    border: 2px solid #000;
+    height: 25px;
+    padding-top: 10px;
+    display: inline-block;
+}

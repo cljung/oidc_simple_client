@@ -1,13 +1,14 @@
 {
 	"client_id": "...guid...",
 	"client_secret": "...secret key for webapp, blank for SPA/POKCE...",
-	"scope": "openid offline_access {client_id}",
+	"scope": "openid offline_access",
 	"response_type": "code",
 	"response_mode": "query",
 	"PKCE": false,
+	"promptLogin": "",
 	"redirectUrl": "http://localhost:3000/index.html",
 	"authorization_endpoint": "",
 	"token_endpoint": "", 
 	"end_session_endpoint": "",
-	"metadataUrl": "https://yourtenant.b2clogin.com/yourtenant.onmicrosoft.com/B2C_1A_signup_signin/v2.0/.well-known/openid-configuration"
+	"metadataUrl": "https://login.microsoftonline.com/yourtenant/v2.0/.well-known/openid-configuration"
 }

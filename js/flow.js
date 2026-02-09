@@ -5,7 +5,6 @@ var useROPC = false;
 // construct the redirect url to the IDP
 function getIdpUrl() {
     var config = JSON.parse(window.localStorage.getItem('config' ));
-    //scope = config.scope.replace("{client_id}", config.client_id);
     scope = getScope(config, "GET");
     if ( config.ROPC == true ) {
         return config.token_endpoint;
@@ -19,7 +18,11 @@ function getIdpUrl() {
         if ( config.response_mode.length > 0 ) {
             response_mode = "&response_mode=" + config.response_mode;
         }
-        return config.authorization_endpoint + "?response_type=" + config.response_type + response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl + "&nonce=" + nonce + resource;
+        var prompt = "";
+        if ( config.promptLogin.length > 0 ) {
+            prompt = "&prompt=" + config.promptLogin;
+        }
+        return config.authorization_endpoint + "?response_type=" + config.response_type + response_mode + "&scope=" + scope + "&client_id=" + config.client_id + "&redirect_uri=" + config.redirectUrl + "&nonce=" + nonce + resource + prompt;
     }
 }
 
@@ -182,9 +185,20 @@ function getAccessToken() {
 	return hash.access_token;
 }
 
+function updateUIToken(token, token_id, labelName, elementId) {
+    if ( token ) {
+        var linkJwt = "<a href=\"https://jwt.ms#" + token_id + "=" + id_token + "\" target=\"_blank\">" + token + "</a>";
+        document.getElementById(elementId).innerHTML = "<h2>" + labelName + "</h2>" + linkJwt;
+        document.getElementById(elementId).style.display = "block";
+    } else {
+        document.getElementById(elementId).style.display = "none";
+    }
+}
 function uiUpdateTokens( id_token, access_token, refresh_token ) {
     document.getElementById('un-authenticated-msg').style.display = "none";
     document.getElementById('authenticated-msg').style.display = "block";
+    updateUIToken( id_token, 'id_token', 'Id Token', 'id-token-msg');
+    /*
     if (id_token) {
         var linkJwt = "<a href=\"https://jwt.ms#id_token=" + id_token + "\" target=\"_blank\">" + id_token + "</a>";
         document.getElementById('id-token-msg').innerHTML = "<h2>Id Token</h2>" + linkJwt;
@@ -192,6 +206,9 @@ function uiUpdateTokens( id_token, access_token, refresh_token ) {
     } else {
         document.getElementById('id-token-msg').style.display = "none";
     }
+    */
+    updateUIToken( access_token, 'access_token', 'Access Token', 'access-token-msg');
+    /*
     if (access_token) {
         var linkJwt = "<a href=\"https://jwt.ms#access_token=" + access_token + "\" target=\"_blank\">" + access_token + "</a>";
         document.getElementById('access-token-msg').innerHTML = "<h2>Access Token</h2>" + linkJwt;
@@ -199,6 +216,7 @@ function uiUpdateTokens( id_token, access_token, refresh_token ) {
     } else {
         document.getElementById('access-token-msg').style.display = "none";
     }        
+    */
     if (refresh_token) {
         var btnRefresh = "<button type=\"button\" id=\"idRefreshToken\" onclick=\"refresAccessToken('" + refresh_token + "')\">refresh Token</button>";
         document.getElementById('refresh-token-msg').innerHTML = "<h2>Refresh Token</h2>" + "<p>" + refresh_token + "<br/><br/>" + btnRefresh + "</p>";

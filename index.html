@@ -10,6 +10,8 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/CodeFlask.js/0.1.1/codeflask.min.js" async></script>
 	<script src="/js/jquery-3.5.1.js" axync></script>
 	<script src="/js/FileSaver.js"></script>
+	<script src="/js/index.js"></script>
+	<link rel="stylesheet" href="/css/site.css">
 	<style>
 		label { width:200px; display: inline-block; }
 		input { width:600px; display: inline-block; }
@@ -19,292 +21,96 @@
   </head>
   <body>
 	<p id="un-authenticated-msg" style="display:none;">
-	  <h1>Config Page</h1>	
+	  <h1>OIDC Simple Auth Client</h1>	
+	  <a href="https://github.com/cljung/oidc_simple_client" target="_blank">github repo</a>
 	  <p>
 	  	Configuration is stored in Browser Local Storage. You can load it via url, via a local file or via pasting in the correct json in the texbox.
 		<br/>
-		If you fill in the config from scratch, the *-marked items are mandatory.
-		<br/>
-	  	The source code for this webapp can be found in this <a href="https://github.com/cljung/oidc_simple_client" target="_blank">github repo</a>.
-		<br/>
-		No data is stored on the server. Everything happens in the browser. Also, no OAuth client library is used. It is all implemented in javascript.  
+		If you fill in the config from scratch, the *-marked items are mandatory. Config is only stored in browser local storage.
 	  </p>
 	  <p>
 		<button type="button" onclick="loadConfigFromSource()">Load From Url</button>
-		<button type="button" onclick="clearConfig()">Clear</button>
+		<label for="configFile" class="fileUpload">Upload Config File</label>
 		<input type="file" id="configFile"/>
-		<br/>		
+		<button type="button" onclick="clearConfig()">Clear</button>
+		<button type="button" onclick="downloadConfig()">Download</button>
+		<br/><br/>
 	  	<label for="configUrl">Config Url/Json: </label>
   		<input type="text" id="configUrl" value=""><br/><br/>
 		
 	  	<label for="client_id">client_id*: </label>
-  		<input type="text" id="client_id" value=""><br/><br/>
+  		<input type="text" id="client_id" value=""><br/>
 
 	  	<label for="client_secret">client_secret: </label>
-  		<input type="password" id="client_secret" value=""><br/><br/>
+  		<input type="password" id="client_secret" value=""><br/>
 
 	  	<label for="redirectUrl">redirectUrl*: </label>
-  		<input type="text" id="redirectUrl" value=""><br/><br/>
+  		<input type="text" id="redirectUrl" value=""><br/>
 
 	  	<label for="scope">scope*: </label>
-  		<input type="text" id="scope" value=""><br/><br/>
+  		<input type="text" id="scope" value=""><br/>
 
 	  	<label for="resource">resource: </label>
-  		<input type="text" id="resource" value=""><br/><br/>
+  		<input type="text" id="resource" value=""><br/>
 
 	  	<label for="response_type">response_type*: </label>
-  		<input type="text" id="response_type" value=""><br/><br/>
+  		<input type="text" id="response_type" value="" list="response_type_list">
+		<datalist id="response_type_list">
+			<option value="code">code</option>
+			<option value="code id_token">code id_token</option>
+			<option value="code id_token token">code id_token token</option>
+			<option value="id_token">id_token</option>
+			<option value="id_token token">id_token token</option>
+		</datalist>
+		<br/>
 
-	  	<label for="pkce">PKCE: </label>		  
-  		<input type="checkbox" id="pkce" onclick="onPkce()"><br/><br/>
+		<label for="response_mode">response_mode: </label>
+  		<input type="text" id="response_mode" value="" list="response_mode_list">
+		<datalist id="response_mode_list">
+			<option value=""></option>
+			<option value="query">query</option>
+			<option value="fragment">fragment</option>
+			<option value="form_post">form_post</option>
+		</datalist>
+		<br/>
+
+	  	<label for="promptLogin">prompt:</label>		  
+  		<input type="text" id="promptLogin" value="" list="promptLogin_list">
+		<datalist id="promptLogin_list">
+			<option value=""></option>
+			<option value="none">none</option>
+			<option value="login">login</option>
+			<option value="consent">consent</option>
+			<option value="select_account">select_account</option>
+			<option value="login+consent">login+consent</option>
+			<option value="select_account+consent">select_account+consent</option>
+		</datalist>
+  		<br/><br/>
+
+		<label for="pkce">PKCE: </label>		  
+  		<input type="checkbox" id="pkce" onclick="onPkce()"><br/>
 
 	  	<label for="ropc">ROPC: </label>		  
-  		<input type="checkbox" id="ropc" onclick="onRopc()"><br/><br/>
-
-	  	<label for="response_mode">response_mode: </label>
-  		<input type="text" id="response_mode" value=""><br/><br/>
+  		<input type="checkbox" id="ropc" onclick="onRopc()"><br/>
+  		<br/><br/>
 
 	  	<label for="metadataUrl">metadataUrl*: </label>
-  		<input type="text" id="metadataUrl" value=""><br/><br/>
+  		<input type="text" id="metadataUrl" value=""><br/>
 		  
 	  	<label for="authorization_endpoint">authorization_endpoint: </label>
-  		<input type="text" id="authorization_endpoint" value=""><br/><br/>
+  		<input type="text" id="authorization_endpoint" value=""><br/>
 
 	  	<label for="token_endpoint">token_endpoint: </label>
-  		<input type="text" id="token_endpoint" value=""><br/><br/>
+  		<input type="text" id="token_endpoint" value=""><br/>
 
 	  	<label for="end_session_endpoint">end_session_endpoint: </label>
   		<input type="text" id="end_session_endpoint" value=""><br/><br/>
 
-		<button type="button" onclick="saveConfig()">Save</button>
-		<button type="button" onclick="downloadConfig()">Download</button>
+		<button type="button" onclick="loadMetadata(document.getElementById('metadataUrl').value)">Load Metadata</button>
 		<button type="button" onclick="runFlow()">Run Flow</button>
 
 	  </p>
 	</p>
 
   </body>
-  <script>
-function onPkce() {
-	config = JSON.parse(window.localStorage.getItem('config' ));
-	config.PKCE = document.getElementById("pkce").checked;
-	if ( config.PKCE == true ) {
-		document.getElementById("ropc").checked = false;
-		var response_type = document.getElementById("response_type").value;
-		if ( response_type.indexOf("code") == -1) {
-			config.response_type = "code " + response_type;
-			document.getElementById('response_type').value = config.response_type;
-			alert( "PKCE is an Auth Code flow and requires 'code' in response_type");
-		}
-	}
-	window.localStorage.setItem('config', JSON.stringify(config) );
-}  
-function onRopc() {
-	config = JSON.parse(window.localStorage.getItem('config' ));
-	config.ROPC = document.getElementById("ropc").checked;
-	if ( config.ROPC == true ) {
-		document.getElementById("pkce").checked = false;
-		config.response_type = "token id_token";
-		document.getElementById('response_type').value = config.response_type;
-	}
-	window.localStorage.setItem('config', JSON.stringify(config) );
-}  
-function parseParms(str) {
-	var pieces = str.split("&"), data = {}, i, parts;
-	// process each query pair
-	for (i = 0; i < pieces.length; i++) {
-		parts = pieces[i].split("=");
-		if (parts.length < 2) {
-			parts.push("");
-		}
-		data[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
-	}
-	return data;
-}
-
-// config that is needed for the IDP. We persist it to browser local storage in index.html so the other pages can use it
-var config = {
-	client_id: "",
-	client_secret: "",
-	scope: "openid offline_access {client_id}",
-	response_type: "code",
-	resource: "",
-	response_mode: "query",
-	PKCE: false,
-	ROPC: false,
-	redirectUrl: document.location.origin + "/index.html",     // index.html will handle redirect back to index_authcode.html
-	authorization_endpoint: "", 
-	token_endpoint: "", 
-	end_session_endpoint: "",
-	metadataUrl: "https://yourtenant.b2clogin.com/yourtenant.onmicrosoft.com/B2C_1A_signup_signin/v2.0/.well-known/openid-configuration"
-}
-
-window.onload = function() {
-	document.getElementById('configFile').addEventListener('change', function() {
-		var fr=new FileReader(); 
-		fr.onload=function(){ 
-			getConfigFromString(fr.result); 
-		} 
-		fr.readAsText(this.files[0]); 
-	})
-	// if this is not the first time we hit this page, we have the config in browser local storage
-	var data = window.localStorage.getItem('config' );
-	if ( data ) {
-		loadConfig();
-	} else {		
-		updateUI();
-	}
-	// possible redirects. code == auth code flow. hash == implicit grant
-	var code = parseParms(document.location.search.substring(1)).code;
-	if ( code ) {
-		document.location = "/runflow.html" + document.location.search;
-	} 
-	if ( document.location.hash) {
-		document.location = "/runflow.html" + document.location.hash;
-	}
-	var id_token = parseParms(document.location.search.substring(1)).id_token;
-	var access_token = parseParms(document.location.search.substring(1)).access_token;
-	if ( id_token || access_token ) {
-		document.location = "/runflow.html" + document.location.search;
-	} 
-}
-
-function updateUI() {
-	document.getElementById('client_id').value = config.client_id;
-	document.getElementById('client_secret').value = config.client_secret;
-	document.getElementById('metadataUrl').value = config.metadataUrl;
-	document.getElementById('authorization_endpoint').value = config.authorization_endpoint;
-	document.getElementById('end_session_endpoint').value = config.end_session_endpoint;
-	document.getElementById('token_endpoint').value = config.token_endpoint;
-	if ( config.redirectUrl.startsWith("{{host}}")) {
-		config.redirectUrl = config.redirectUrl.replace("{{host}}", document.location.origin);
-	}
-	document.getElementById('redirectUrl').value = config.redirectUrl;	
-	document.getElementById('scope').value = config.scope;	
-	document.getElementById('response_type').value = config.response_type;	
-	document.getElementById('resource').value = config.resource;	
-	document.getElementById('response_mode').value = config.response_mode;	
-	document.getElementById("pkce").checked = config.PKCE;
-	document.getElementById("ropc").checked = config.ROPC;
-	var urlConfig = window.localStorage.getItem('configUrl' );
-	if(urlConfig == undefined && urlConfig == null) {
-		urlConfig = document.location.origin + "/config.json"		
-	}
-	document.getElementById('configUrl').value = urlConfig;
-}
-function clearUI() {
-	document.getElementById('client_id').value = "";
-	document.getElementById('client_secret').value = "";
-	document.getElementById('metadataUrl').value = "";
-	document.getElementById('authorization_endpoint').value = "";
-	document.getElementById('end_session_endpoint').value = "";
-	document.getElementById('token_endpoint').value = "";
-	document.getElementById('redirectUrl').value = document.location.origin + "/index.html";
-	document.getElementById('scope').value = "openid offline_access {client_id}";	
-	document.getElementById('response_type').value = "code";		
-	document.getElementById('resource').value = "";		
-	document.getElementById('response_mode').value = "query";		
-	document.getElementById("pkce").checked = false;
-	document.getElementById("ropc").checked = false;
-}
-
-function clearConfig() {
-	window.localStorage.removeItem('config' );
-	window.localStorage.removeItem('configUrl' );
-	clearUI();
-}
-function downloadConfig() {
-	config = JSON.parse(window.localStorage.getItem('config' ));
-	var fileName = 'config.json';
-	var fileToSave = new Blob([JSON.stringify(config,undefined,2)], {
-		type: 'application/json',
-		name: fileName
-	});
-	saveAs(fileToSave, fileName);
-}
-function loadConfig() {
-	config = JSON.parse(window.localStorage.getItem('config' ));
-	updateUI();
-}
-function saveConfig() {
-	config.client_id = document.getElementById('client_id').value;
-	config.client_secret = document.getElementById('client_secret').value;
-	config.metadataUrl = document.getElementById('metadataUrl').value;
-	config.authorization_endpoint = document.getElementById('authorization_endpoint').value;
-	config.token_endpoint = document.getElementById('token_endpoint').value;
-	config.end_session_endpoint = document.getElementById('end_session_endpoint').value;
-	config.redirectUrl = document.getElementById('redirectUrl').value;	
-	config.scope = document.getElementById('scope').value;	
-	config.response_type = document.getElementById('response_type').value;	
-	config.resource = document.getElementById('resource').value;	
-	config.response_mode = document.getElementById('response_mode').value;	
-	config.PKCE = document.getElementById("pkce").checked;
-	config.ROPC = document.getElementById("ropc").checked;
-	window.localStorage.setItem('config', JSON.stringify(config) );
-	// if we have a metadataUrl, try go getch its details so we can get authorization/token endpoints
-	if ( config.metadataUrl ) {
-		loadMetadata(config.metadataUrl );
-	}
-}
-function runFlow() {
-	saveConfig();
-	document.location = "/runflow.html";
-}
-function loadMetadata(metadataUrl) {
-	if ( metadataUrl === undefined || metadataUrl === "") {
-		return;
-	}
-	$.ajax({
-		url: metadataUrl,
-		type: 'get',
-		headers: {
-        	'Accept': 'application/json'
-    	},
-		success: function(response) {
-			config = JSON.parse(window.localStorage.getItem('config' ));
-			config.authorization_endpoint = response.authorization_endpoint;
-			config.token_endpoint = response.token_endpoint;
-			config.end_session_endpoint = response.end_session_endpoint;
-			window.localStorage.setItem('config', JSON.stringify(config) );
-			updateUI();
-		},error: function( jqXhr, textStatus, errorThrown ){
-			console.log( jqXhr );
-		}
-	});	
-}
-
-function loadConfigFromSource() {
-	var urlConfig = document.getElementById('configUrl').value;
-	if ( urlConfig.startsWith("http") ) {
-		getConfigFromUrl(urlConfig);
-	} else {
-		getConfigFromString(urlConfig);
-	}
-}
-
-function getConfigFromString(json) {
-	config = JSON.parse(json); // this will crash if invalid json so we skip next lines
-	window.localStorage.setItem('config', JSON.stringify(config) );
-	window.localStorage.setItem('configUrl', json );
-	updateUI();
-	loadMetadata( config.metadataUrl );
-}
-function getConfigFromUrl(urlConfig) {
-	clearUI();
-	$.ajax({
-        url: urlConfig,
-        type: 'get',
-		success: function(response) {            
-			config = response; 
-			window.localStorage.setItem('config', JSON.stringify(config) );
-			window.localStorage.setItem('configUrl', urlConfig );
-			updateUI();
-			loadMetadata( config.metadataUrl );
-        },error: function( jqXhr, textStatus, errorThrown ){
-			console.log( jqXhr );
-        }
-	});
-
-}
-  </script>
 </html>
