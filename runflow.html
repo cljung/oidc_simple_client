@@ -21,14 +21,14 @@
 	</style>
 </head>
 <body>
-  <body>
+  <div class="container">
 	<p id="un-authenticated-msg" style="display:none;">
 	  <h1 id="id-h1-title">Auth Code Flow login</h1>
 	  <div id="help-msg">
 	  Click the button or the link below to log in! You can also copy the link and paste it in the browser url and navigate there.
 	  </div>
 	  <br>
-	  <button type="button" onclick="authorize()">Log in</button><br/><a href="/index.html">Start Page</a>
+	  <button type="button" style="width: 100px" onclick="authorize()">Log in</button><br/><a href="/index.html">Start Page</a>
 	</p>
 	<p id="authenticated-msg" style="display:none;">		
 	  <button type="button" onclick="logout()">Log out</button>
@@ -65,5 +65,6 @@
 	<p id="error-msg" style="display:none;">
 	  
 	</p>
+  </div>
   </body>
 </html>

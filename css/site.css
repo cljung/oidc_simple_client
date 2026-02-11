@@ -41,3 +41,7 @@ input[type=file] {
     padding-top: 10px;
     display: inline-block;
 }
+.container {
+    justify-content:center;
+    display:grid;
+}
